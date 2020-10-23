@@ -7,11 +7,10 @@ local Point = Point
 local relativePoint = relativePoint
 local buffs1 = {}
 local buffs2= {}
+
 local spellIds = {
-	[17] = "True",
-	[194384] = "True",
-	[21562] = "True",
-	[297412] = "True",
+	--[17] = "True",
+
 }
 
 
@@ -24,16 +23,26 @@ LoseControlWarning:RegisterEvent("GROUP_ROSTER_UPDATE")
 LoseControlWarning:RegisterEvent("GROUP_JOINED")
 
 LoseControlparty1:HookScript("OnShow", function(self)
+	--LC Frames May not load in Raids or BGs or instances larger than 5, May need to do a Return Cancell Here
 if GetNumGroupMembers() > 5  and Raid == false then return end
 	LoseControlWarning("party1")
 end)
 LoseControlparty2:HookScript("OnShow", function(self)
+	--LC Frames May not load in Raids or BGs or instances larger than 5, May need to do a Return Cancell Here
+if GetNumGroupMembers() > 5  and Raid == false then return end
+	LoseControlWarning("party2")
+end)
+LoseControlparty1:HookScript("OnHide", function(self)
+if GetNumGroupMembers() > 5  and Raid == false then return end
+	LoseControlWarning("party1")
+end)
+LoseControlparty2:HookScript("OnHide", function(self)
 if GetNumGroupMembers() > 5  and Raid == false then return end
 	LoseControlWarning("party2")
 end)
 
 function LoseControlWarning:GROUP_ROSTER_UPDATE()
-if GetNumGroupMembers() > 5  and Raid == false then return end
+	if GetNumGroupMembers() > 5  and Raid == false then return end
 	LoseControlWarning("player")
 	for i = 1, GetNumGroupMembers() do
 	local unitId = "party"..i
@@ -44,6 +53,41 @@ end
 function LoseControlWarning:GROUP_JOINED()
 self:GROUP_ROSTER_UPDATE()
 end
+
+
+local function compare(t1,t2,ignore_mt)
+   local ty1 = type(t1)
+   local ty2 = type(t2)
+   if ty1 ~= ty2 then return false end
+   -- non-table types can be directly compared
+   if ty1 ~= 'table' and ty2 ~= 'table' then return t1 == t2 end
+   -- as well as tables which have the metamethod __eq
+   local mt = getmetatable(t1)
+   if not ignore_mt and mt and mt.__eq then return t1 == t2 end
+   for k1,v1 in pairs(t1) do
+      local v2 = t2[k1]
+      if v2 == nil or not compare(v1,v2) then return false end
+   end
+   for k2,v2 in pairs(t2) do
+      local v1 = t1[k2]
+      if v1 == nil or not compare(v1,v2) then return false end
+   end
+   return true
+end
+
+local function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 
 function LoseControlWarning:UNIT_AURA(unitId)
 if GetNumGroupMembers() > 5  and Raid == false then return end
@@ -113,21 +157,21 @@ if GetNumGroupMembers() > 5  and Raid == false then return end
 	  	local j = 1
 			for i = 1, 40 do
 			local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i, HELPFUL)
-						if scf[j..unitId] then
+						if scf[i..unitId] then
 						--	print(unitId, "buff", i, ")", name, "|", duration, "|", expirationTime, "|", spellId)
-							scf[j..unitId]:Hide()
-							scf[j..unitId].cooldown:Hide()
+							scf[i..unitId]:Hide()
+							scf[i..unitId].cooldown:Hide()
 						end
 			   				if spellIds[spellId] then
 									if unitId == "player" or "party1" or "party2" then
-												scf[j..unitId] = CreateFrame("Frame", "UAdebuff"..j..unitId)
-												scf[j..unitId]:SetHeight(40)
-												scf[j..unitId]:SetWidth(40)
+												scf[j..unitId] = CreateFrame("Frame", "LCWarning"..j..unitId)
+												scf[j..unitId]:SetHeight(30)
+												scf[j..unitId]:SetWidth(30)
 												scf[j..unitId].texture = scf[j..unitId]:CreateTexture(scf[j..unitId], 'BACKGROUND')
 												scf[j..unitId].texture:SetAllPoints(scf[j..unitId])
 												scf[j..unitId].cooldown = CreateFrame("Cooldown", nil, scf[j..unitId], 'CooldownFrameTemplate')
 												scf[j..unitId].count=scf[j..unitId]:CreateFontString(scf[j..unitId],"OVERLAY","NumberFontNormal");
-												scf[j..unitId].count:SetPoint("BOTTOMRIGHT",-5,2);
+												scf[j..unitId].count:SetPoint("BOTTOMRIGHT",-2,1);
 												scf[j..unitId].count:SetJustifyH("RIGHT");
 												scf[j..unitId].texture:SetTexture(icon)
 														if count then
@@ -144,10 +188,12 @@ if GetNumGroupMembers() > 5  and Raid == false then return end
 														end
 												scf[j..unitId].cooldown:SetCooldown( expirationTime - duration, duration)
 												scf[j..unitId].cooldown:SetAllPoints(scf[j..unitId])
-												scf[j..unitId].cooldown:SetDrawSwipe()
-												scf[j..unitId].cooldown:SetDrawEdge()
-												scf[j..unitId].cooldown:SetReverse(false) --will reverse the swipe if actionbars or debuff, by default bliz sets the swipe to actionbars if this = true it will be set to debuffs
-												scf[j..unitId].cooldown:SetDrawBling()
+												scf[j..unitId].cooldown:SetEdgeTexture("Interface\\Cooldown\\edge")    --("Interface\\Cooldown\\edge-LoC") Blizz LC CD
+												scf[j..unitId].cooldown:SetDrawSwipe(true)
+												scf[j..unitId].cooldown:SetDrawEdge(false)
+												scf[j..unitId].cooldown:SetSwipeColor(0.17, 0, 0)
+												scf[j..unitId].cooldown:SetReverse(true) --will reverse the swipe if actionbars or debuff, by default bliz sets the swipe to actionbars if this = true it will be set to debuffs
+												scf[j..unitId].cooldown:SetDrawBling(false)
 																							if unitId == "player" then
 																												relativeFrame = PF
 																												relativePoint = "BOTTOMRIGHT"
@@ -168,7 +214,7 @@ if GetNumGroupMembers() > 5  and Raid == false then return end
 																												relativePoint = "BOTTOMLEFT"
 																												Point = "BOTTOMRIGHT"
 																											else
-																												relativeFrame = PartyAnchor1
+																												relativeFrame = PartyAnchor2
 																												relativePoint = "BOTTOMRIGHT"
 																												Point = "BOTTOMRIGHT"
 																											end
@@ -186,37 +232,4 @@ if GetNumGroupMembers() > 5  and Raid == false then return end
 									end
 							end
 		    end
-end
-
-function compare(t1,t2,ignore_mt)
-   local ty1 = type(t1)
-   local ty2 = type(t2)
-   if ty1 ~= ty2 then return false end
-   -- non-table types can be directly compared
-   if ty1 ~= 'table' and ty2 ~= 'table' then return t1 == t2 end
-   -- as well as tables which have the metamethod __eq
-   local mt = getmetatable(t1)
-   if not ignore_mt and mt and mt.__eq then return t1 == t2 end
-   for k1,v1 in pairs(t1) do
-      local v2 = t2[k1]
-      if v2 == nil or not compare(v1,v2) then return false end
-   end
-   for k2,v2 in pairs(t2) do
-      local v1 = t1[k2]
-      if v1 == nil or not compare(v1,v2) then return false end
-   end
-   return true
-end
-
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
 end
