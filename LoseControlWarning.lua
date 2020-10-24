@@ -6,11 +6,18 @@ local relativeFrame = relativeFrame
 local Point = Point
 local relativePoint = relativePoint
 local buffs1 = {}
-local buffs2= {}
+local buffs2 = {}
+
+local hieght = 30
+local width = 30
 
 local spellIds = {
-	--[17] = "True",
-
+	[233490] = "True",
+	[233497] = "True",
+	[233498] = "True",
+	[233499] = "True",
+	[34914] = "True",
+	--[6788] = "True",
 }
 
 
@@ -107,7 +114,7 @@ local k = 1
 	end
 
 		for i = 1, 40 do
-				local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i, HELPFUL)
+				local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i,  "HARMFUL")
 				if not spellId then break end
 				if spellIds[spellId] then
 				table.insert(buffs1[unitId], k , expirationTime )
@@ -156,7 +163,7 @@ if GetNumGroupMembers() > 5  and Raid == false then return end
 		--print("buffs2:", dump(buffs2))
 	  	local j = 1
 			for i = 1, 40 do
-			local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i, HELPFUL)
+			local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i,  "HARMFUL")
 						if scf[i..unitId] then
 						--	print(unitId, "buff", i, ")", name, "|", duration, "|", expirationTime, "|", spellId)
 							scf[i..unitId]:Hide()
@@ -165,8 +172,8 @@ if GetNumGroupMembers() > 5  and Raid == false then return end
 			   				if spellIds[spellId] then
 									if unitId == "player" or "party1" or "party2" then
 												scf[j..unitId] = CreateFrame("Frame", "LCWarning"..j..unitId)
-												scf[j..unitId]:SetHeight(30)
-												scf[j..unitId]:SetWidth(30)
+												scf[j..unitId]:SetHeight(hieght)
+												scf[j..unitId]:SetWidth(width)
 												scf[j..unitId].texture = scf[j..unitId]:CreateTexture(scf[j..unitId], 'BACKGROUND')
 												scf[j..unitId].texture:SetAllPoints(scf[j..unitId])
 												scf[j..unitId].cooldown = CreateFrame("Cooldown", nil, scf[j..unitId], 'CooldownFrameTemplate')
