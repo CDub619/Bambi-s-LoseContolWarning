@@ -31,37 +31,35 @@ LoseControlWarning:RegisterEvent("GROUP_ROSTER_UPDATE")
 LoseControlWarning:RegisterEvent("GROUP_JOINED")
 
 LoseControlparty1:HookScript("OnShow", function(self)
-	--LC Frames May not load in Raids or BGs or instances larger than 5, May need to do a Return Cancell Here
 if GetNumGroupMembers() > 5  and Raid == false then return end
-	LoseControlWarning("party1")
+	LoseControlWarning:UpdateFrames("party1")
 end)
 LoseControlparty2:HookScript("OnShow", function(self)
-	--LC Frames May not load in Raids or BGs or instances larger than 5, May need to do a Return Cancell Here
 if GetNumGroupMembers() > 5  and Raid == false then return end
-	LoseControlWarning("party2")
+	LoseControlWarning:UpdateFrames("party2")
 end)
+
 LoseControlparty1:HookScript("OnHide", function(self)
 if GetNumGroupMembers() > 5  and Raid == false then return end
-	LoseControlWarning("party1")
+	LoseControlWarning:UpdateFrames("party1")
 end)
 LoseControlparty2:HookScript("OnHide", function(self)
 if GetNumGroupMembers() > 5  and Raid == false then return end
-	LoseControlWarning("party2")
+	LoseControlWarning:UpdateFrames("party2")
 end)
 
 function LoseControlWarning:GROUP_ROSTER_UPDATE()
 	if GetNumGroupMembers() > 5  and Raid == false then return end
-	LoseControlWarning("player")
+		LoseControlWarning:UpdateFrames("player")
 	for i = 1, GetNumGroupMembers() do
-	local unitId = "party"..i
-	LoseControlWarning(unitId)
+		local unitId = "party"..i
+		LoseControlWarning:UpdateFrames(unitId)
 	end
 end
 
 function LoseControlWarning:GROUP_JOINED()
-self:GROUP_ROSTER_UPDATE()
+	self:GROUP_ROSTER_UPDATE()
 end
-
 
 local function compare(t1,t2,ignore_mt)
    local ty1 = type(t1)
@@ -83,161 +81,139 @@ local function compare(t1,t2,ignore_mt)
    return true
 end
 
-local function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
-
 function LoseControlWarning:UNIT_AURA(unitId)
 if GetNumGroupMembers() > 5  and Raid == false then return end
 local k = 1
 
-		if not buffs1[unitId] then
-			buffs1[unitId] = {}
-		end
-		if not buffs2[unitId] then
-			buffs2[unitId] = {}
-		end
-
-	if #buffs1[unitId] > 0 then
-			for i = 1, #buffs1[unitId] do
-					buffs1[unitId][i] = nil
-				end
+	if not buffs1[unitId] then
+		buffs1[unitId] = {}
+	end
+	if not buffs2[unitId] then
+		buffs2[unitId] = {}
 	end
 
-		for i = 1, 40 do
-				local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i,  "HARMFUL")
-				if not spellId then break end
-				if spellIds[spellId] then
-				table.insert(buffs1[unitId], k , expirationTime )
-			  --print(unitId, "buff1", k, ")", name, "|", duration, "|", expirationTime, "|", spellId)
-					k = k + 1
+	if #buffs1[unitId] > 0 then
+		for i = 1, #buffs1[unitId] do
+				buffs1[unitId][i] = nil
+		end
+	end
+
+	for i = 1, 40 do
+		local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i,  "HARMFUL")
+		if not spellId then break end
+		if spellIds[spellId] then
+		table.insert(buffs1[unitId], k , expirationTime )
+			k = k + 1
+		end
+	end
+
+	if #buffs1[unitId] ~= #buffs2[unitId] then
+		LoseControlWarning:UpdateFrames(unitId)
+		if #buffs2[unitId] > 0 then
+			for i = 1, #buffs2[unitId] do
+				buffs2[unitId][i] = nil
+			end
+		end
+		if #buffs1[unitId] > 0 then
+			for i = 1, #buffs1[unitId] do
+				buffs2[unitId][i] = buffs1[unitId][i]
+			end
+  	end
+	else
+		if compare(buffs1[unitId], buffs2[unitId]) then
+		else
+			LoseControlWarning:UpdateFrames(unitId)
+			if #buffs2[unitId] > 0 then
+				for i = 1, #buffs2[unitId] do
+					buffs2[unitId][i] = nil
 				end
 			end
-
-					if #buffs1[unitId] ~= #buffs2[unitId] then
-							--print("fire cond 1")
-							LoseControlWarning(unitId)
-							if #buffs2[unitId] > 0 then
-								for i = 1, #buffs2[unitId] do
-										buffs2[unitId][i] = nil
-								end
-							end
-							if #buffs1[unitId] > 0 then
-								for i = 1, #buffs1[unitId] do
-										buffs2[unitId][i] = buffs1[unitId][i]
-								end
-				    	end
-					else
-							if compare(buffs1[unitId], buffs2[unitId]) then
-							--print("no fire cond 2")
-							else
-							--print("fire cond 2")
-								LoseControlWarning(unitId)
-								if #buffs2[unitId] > 0 then
-										for i = 1, #buffs2[unitId] do
-												buffs2[unitId][i] = nil
-										end
-								end
-								if #buffs1[unitId] > 0 then
-									for i = 1, #buffs1[unitId] do
-											buffs2[unitId][i] = buffs1[unitId][i]
-									end
-								end
-							end
-					end
+			if #buffs1[unitId] > 0 then
+				for i = 1, #buffs1[unitId] do
+					buffs2[unitId][i] = buffs1[unitId][i]
+				end
+			end
+		end
+	end
 end
 
-
-function LoseControlWarning(unitId)
+function LoseControlWarning:UpdateFrames(unitId)
 if GetNumGroupMembers() > 5  and Raid == false then return end
-		--print("buffs1:", dump(buffs1))
-		--print("buffs2:", dump(buffs2))
-	  	local j = 1
-			for i = 1, 40 do
-			local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i,  "HARMFUL")
-						if scf[i..unitId] then
-						--	print(unitId, "buff", i, ")", name, "|", duration, "|", expirationTime, "|", spellId)
-							scf[i..unitId]:Hide()
-							scf[i..unitId].cooldown:Hide()
+	local j = 1
+	for i = 1, 40 do
+		local name, icon, count, _, duration, expirationTime, _, _, _, spellId = UnitAura(unitId, i,  "HARMFUL")
+		if scf[i..unitId] then
+			scf[i..unitId]:Hide()
+			scf[i..unitId].cooldown:Hide()
+		end
+		if spellIds[spellId] then
+			if unitId == "player" or "party1" or "party2" then
+				scf[j..unitId] = CreateFrame("Frame", "LCWarning"..j..unitId)
+				scf[j..unitId]:SetHeight(hieght)
+				scf[j..unitId]:SetWidth(width)
+				scf[j..unitId].texture = scf[j..unitId]:CreateTexture(scf[j..unitId], 'BACKGROUND')
+				scf[j..unitId].texture:SetAllPoints(scf[j..unitId])
+				scf[j..unitId].cooldown = CreateFrame("Cooldown", nil, scf[j..unitId], 'CooldownFrameTemplate')
+				scf[j..unitId].count=scf[j..unitId]:CreateFontString(scf[j..unitId],"OVERLAY","NumberFontNormal");
+				scf[j..unitId].count:SetPoint("BOTTOMRIGHT",-2,1);
+				scf[j..unitId].count:SetJustifyH("RIGHT");
+				scf[j..unitId].texture:SetTexture(icon)
+				if count then
+					if ( count > 1 ) then
+						local countText = count
+						if ( count >= 100 ) then
+						 countText = BUFF_STACKS_OVERFLOW
 						end
-			   				if spellIds[spellId] then
-									if unitId == "player" or "party1" or "party2" then
-												scf[j..unitId] = CreateFrame("Frame", "LCWarning"..j..unitId)
-												scf[j..unitId]:SetHeight(hieght)
-												scf[j..unitId]:SetWidth(width)
-												scf[j..unitId].texture = scf[j..unitId]:CreateTexture(scf[j..unitId], 'BACKGROUND')
-												scf[j..unitId].texture:SetAllPoints(scf[j..unitId])
-												scf[j..unitId].cooldown = CreateFrame("Cooldown", nil, scf[j..unitId], 'CooldownFrameTemplate')
-												scf[j..unitId].count=scf[j..unitId]:CreateFontString(scf[j..unitId],"OVERLAY","NumberFontNormal");
-												scf[j..unitId].count:SetPoint("BOTTOMRIGHT",-2,1);
-												scf[j..unitId].count:SetJustifyH("RIGHT");
-												scf[j..unitId].texture:SetTexture(icon)
-														if count then
-															if ( count > 1 ) then
-															local countText = count
-																if ( count >= 100 ) then
-																 countText = BUFF_STACKS_OVERFLOW
-																end
-																scf[j..unitId].count:Show();
-																scf[j..unitId].count:SetText(countText)
-														else
-														  	scf[j..unitId].count:Hide();
-														end
-														end
-												scf[j..unitId].cooldown:SetCooldown( expirationTime - duration, duration)
-												scf[j..unitId].cooldown:SetAllPoints(scf[j..unitId])
-												scf[j..unitId].cooldown:SetEdgeTexture("Interface\\Cooldown\\edge")    --("Interface\\Cooldown\\edge-LoC") Blizz LC CD
-												scf[j..unitId].cooldown:SetDrawSwipe(true)
-												scf[j..unitId].cooldown:SetDrawEdge(false)
-												scf[j..unitId].cooldown:SetSwipeColor(0.17, 0, 0)
-												scf[j..unitId].cooldown:SetReverse(true) --will reverse the swipe if actionbars or debuff, by default bliz sets the swipe to actionbars if this = true it will be set to debuffs
-												scf[j..unitId].cooldown:SetDrawBling(false)
-																							if unitId == "player" then
-																												relativeFrame = PF
-																												relativePoint = "BOTTOMRIGHT"
-																												Point = "BOTTOMRIGHT"
-																						 elseif unitId == "party1" then
-																											if LoseControlparty1:IsShown() then
-																												relativeFrame = LoseControlparty1
-																												relativePoint = "BOTTOMLEFT"
-																												Point = "BOTTOMRIGHT"
-																											else
-																												relativeFrame = PartyAnchor1
-																												relativePoint = "BOTTOMRIGHT"
-																												Point = "BOTTOMRIGHT"
-																											end
-																							elseif unitId == "party2" then
-																											if LoseControlparty2:IsShown() then
-																												relativeFrame = LoseControlparty2
-																												relativePoint = "BOTTOMLEFT"
-																												Point = "BOTTOMRIGHT"
-																											else
-																												relativeFrame = PartyAnchor2
-																												relativePoint = "BOTTOMRIGHT"
-																												Point = "BOTTOMRIGHT"
-																											end
-																								else
-																								end
-																												if j == 1 then
-																												scf[j..unitId]:ClearAllPoints()
-																												scf[j..unitId]:SetParent(relativeFrame)
-																												scf[j..unitId]:SetPoint(Point, relativeFrame, relativePoint, 0, 0)
-																												else
-																												scf[j..unitId]:SetParent(relativeFrame)
-																												scf[j..unitId]:SetPoint("BOTTOMRIGHT", scf[(j-1)..unitId], "BOTTOMLEFT",0,0)
-																												end
-										 	j = j + 1
-									end
-							end
-		    end
+						scf[j..unitId].count:Show();
+						scf[j..unitId].count:SetText(countText)
+					else
+				  	scf[j..unitId].count:Hide();
+					end
+				end
+				scf[j..unitId].cooldown:SetCooldown( expirationTime - duration, duration)
+				scf[j..unitId].cooldown:SetAllPoints(scf[j..unitId])
+				scf[j..unitId].cooldown:SetEdgeTexture("Interface\\Cooldown\\edge")    --("Interface\\Cooldown\\edge-LoC") Blizz LC CD
+				scf[j..unitId].cooldown:SetDrawSwipe(true)
+				scf[j..unitId].cooldown:SetDrawEdge(false)
+				scf[j..unitId].cooldown:SetSwipeColor(0.17, 0, 0)
+				scf[j..unitId].cooldown:SetReverse(true) --will reverse the swipe if actionbars or debuff, by default bliz sets the swipe to actionbars if this = true it will be set to debuffs
+				scf[j..unitId].cooldown:SetDrawBling(false)
+				if unitId == "player" then
+					relativeFrame = PF
+					relativePoint = "BOTTOMRIGHT"
+					Point = "BOTTOMRIGHT"
+		 		elseif unitId == "party1" then
+					if LoseControlparty1:IsShown() then
+						relativeFrame = LoseControlparty1
+						relativePoint = "BOTTOMLEFT"
+						Point = "BOTTOMRIGHT"
+					else
+						relativeFrame = PartyAnchor1
+						relativePoint = "BOTTOMRIGHT"
+						Point = "BOTTOMRIGHT"
+					end
+				elseif unitId == "party2" then
+					if LoseControlparty2:IsShown() then
+						relativeFrame = LoseControlparty2
+						relativePoint = "BOTTOMLEFT"
+						Point = "BOTTOMRIGHT"
+					else
+						relativeFrame = PartyAnchor2
+						relativePoint = "BOTTOMRIGHT"
+						Point = "BOTTOMRIGHT"
+					end
+				else
+				end
+				if j == 1 then
+					scf[j..unitId]:ClearAllPoints()
+					scf[j..unitId]:SetParent(relativeFrame)
+					scf[j..unitId]:SetPoint(Point, relativeFrame, relativePoint, 0, 0)
+				else
+					scf[j..unitId]:SetParent(relativeFrame)
+					scf[j..unitId]:SetPoint("BOTTOMRIGHT", scf[(j-1)..unitId], "BOTTOMLEFT",0,0)
+				end
+				j = j + 1
+			end
+		end
+  end
 end
