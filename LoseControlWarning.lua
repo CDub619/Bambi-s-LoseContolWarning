@@ -12,12 +12,27 @@ local hieght = 30
 local width = 30
 
 local spellIds = {
-	[233490] = "True",
-	[233497] = "True",
-	[233498] = "True",
-	[233499] = "True",
-	[316099] = "True",
-	[34914] = "True",
+		[233490] = "True", -- UA
+		[233497] = "True", -- UA
+		[233496] = "True", -- UA
+		[233498] = "True", -- UA
+		[233499] = "True", -- UA
+		[316099] = "True", -- UA
+		[342938] = "True", -- UA
+		[316099] = "True", -- UA
+		[43522] = "True", -- UA
+		[34438] = "True", -- UA
+		[34439] = "True", -- UA
+		[251502] = "True", -- UA
+		[65812] = "True", -- UA
+		[35183] = "True", -- UA
+		[211513] = "True", -- UA
+		[285142] = "True", -- UA
+		[285143] = "True", -- UA
+		[285144] = "True", -- UA
+		[285145] = "True", -- UA
+		[285146] = "True", -- UA
+		[34914] = "True", -- VT
 	--[6788] = "True",
 }
 
